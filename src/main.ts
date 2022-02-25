@@ -1,12 +1,18 @@
 import { Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, type MyPluginSettings } from 'Setting';
+import {
+	DEFAULT_SETTINGS,
+	ToolboxPluginSettingTab,
+	type ToolboxPluginSettings,
+} from 'Setting';
 import { deepMerge } from 'utils/Util';
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings | undefined;
+export default class ToolboxPlugin extends Plugin {
+	settings: ToolboxPluginSettings | undefined;
 
 	override async onload() {
 		await this.loadSettings();
+
+		this.addSettingTab(new ToolboxPluginSettingTab(this.app, this));
 	}
 
 	// override onunload() {}
