@@ -38,17 +38,32 @@ export default class ToolboxPlugin extends Plugin {
 		if (info === undefined) return;
 		const { generator } = info;
 		this.disableMinimalPlugin(id);
-		const minimalPlugin = new generator();
+		const minimalPlugin = new generator(this.app);
 		this.minimalPlugins[id] = minimalPlugin;
 		this.addChild(minimalPlugin);
+		this.addMinimalCommands(minimalPlugin);
 	}
 
 	disableMinimalPlugin(id: string) {
 		const minimalPlugin = this.minimalPlugins[id];
 		if (minimalPlugin) {
+			this.removeMinimalCommands(minimalPlugin);
 			this.removeChild(minimalPlugin);
 			delete this.minimalPlugins[id];
 		}
+	}
+
+	private addMinimalCommands(minimalPlugin: MinimalPlugin) {
+		minimalPlugin.listCommands().forEach((cmd) => {
+			console.log(cmd.id);
+			this.addCommand(cmd);
+		});
+	}
+
+	private removeMinimalCommands(minimalPlugin: MinimalPlugin) {
+		minimalPlugin.listCommands().forEach((cmd) => {
+			this.app.commands.removeCommand(cmd.id);
+		});
 	}
 
 	private loadMinimalPlugins() {
