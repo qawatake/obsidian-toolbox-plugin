@@ -1,4 +1,4 @@
-import { MINIMAL_PLUGIN_GENERATORS } from 'plugins/MinimalPlugin';
+import { MINIMAL_PLUGIN_LIST } from 'plugins/MinimalPlugin';
 import type { MinimalPlugin } from 'plugins/Shared';
 
 import { Plugin } from 'obsidian';
@@ -34,8 +34,9 @@ export default class ToolboxPlugin extends Plugin {
 	}
 
 	enableMinimalPlugin(id: string) {
-		const generator = MINIMAL_PLUGIN_GENERATORS[id];
-		if (!generator) return;
+		const info = MINIMAL_PLUGIN_LIST[id];
+		if (info === undefined) return;
+		const { generator } = info;
 		this.disableMinimalPlugin(id);
 		const minimalPlugin = new generator();
 		this.minimalPlugins[id] = minimalPlugin;
@@ -51,7 +52,7 @@ export default class ToolboxPlugin extends Plugin {
 	}
 
 	private loadMinimalPlugins() {
-		Object.keys(MINIMAL_PLUGIN_GENERATORS).forEach((id) => {
+		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
 			const ok = this.settings?.minimalPlugins[id];
 			if (ok) {
 				this.enableMinimalPlugin(id);
