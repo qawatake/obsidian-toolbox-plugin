@@ -20,5 +20,5 @@
 		"svelte"
 	],
 	"eslint.validate": ["svelte"],
-	"cSpell.words": ["builtins", "esbuild", "outfile"]
+	"cSpell.words": ["builtins", "esbuild", "Linktex", "Linktext", "outfile"]
 }

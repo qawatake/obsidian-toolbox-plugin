@@ -1,5 +1,6 @@
 import { Notice, type App } from 'obsidian';
 import { MinimalPlugin } from 'plugins/Shared';
+import { generateInternalLinkFrom } from './Link';
 
 export class CopyWikiLink extends MinimalPlugin {
 	constructor(app: App) {
@@ -12,8 +13,18 @@ export class CopyWikiLink extends MinimalPlugin {
 		this.addCommand({
 			id: 'copy-wiki-link',
 			name: 'Copy wiki link',
-			callback: () => {
-				new Notice('Copy Wiki Link!');
+			checkCallback: (checking) => {
+				const file = this.app.workspace.getActiveFile();
+				if (file === null) return false;
+				if (checking) return true;
+
+				const link = generateInternalLinkFrom(
+					this.app.metadataCache,
+					file
+				);
+				new Notice(`Copy wiki link of ${file.name}`);
+				navigator.clipboard.writeText(link);
+				return true;
 			},
 		});
 	}
