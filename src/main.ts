@@ -1,5 +1,6 @@
 import { Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, type MyPluginSettings } from 'Setting';
+import { deepMerge } from 'utils/Util';
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings | undefined;
@@ -11,11 +12,7 @@ export default class MyPlugin extends Plugin {
 	// override onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		this.settings = deepMerge(DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
