@@ -13,6 +13,7 @@ import {
 	type MinimalPluginSettings,
 	type UnknownObject,
 } from 'plugins/Shared';
+import { FileSuggest, FolderSuggest } from 'utils/suggesters/FileSuggester';
 
 const DEFAULT_TEMPLATE = '{{content}}';
 const CONTENT_SYNTAX = /{{content}}/g;
@@ -74,8 +75,10 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 	displaySettings(containerEl: HTMLElement): void {
 		new Setting(containerEl)
 			.setName('Template file location')
-			.addText((component) => {
+			.addSearch((component) => {
+				new FileSuggest(this.app, component.inputEl);
 				component
+					.setPlaceholder('Example: folder1/note')
 					.setValue(this.settings.templatePath)
 					.onChange((path) => {
 						this.settings.templatePath = path;
@@ -85,8 +88,10 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 
 		new Setting(containerEl)
 			.setName('Default location for new notes')
-			.addText((component) => {
+			.addSearch((component) => {
+				new FolderSuggest(this.app, component.inputEl);
 				component
+					.setPlaceholder('Example: folder1/folder2')
 					.setValue(this.settings.newFileFolderPath)
 					.onChange((path) => {
 						this.settings.newFileFolderPath = path;
