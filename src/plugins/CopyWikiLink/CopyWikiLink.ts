@@ -1,6 +1,6 @@
 import { Notice, type App } from 'obsidian';
 import { MinimalPlugin } from 'plugins/Shared';
-import { generateInternalLinkFrom } from './Link';
+import { generateInternalLinkFrom } from 'plugins/CopyWikiLink/Link';
 
 export class CopyWikiLink extends MinimalPlugin {
 	constructor(app: App) {
