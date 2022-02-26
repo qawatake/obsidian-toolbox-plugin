@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-toolbox-plugin",
-	"name": "Toolbox Plugin",
+	"name": "Toolbox",
 	"version": "0.0.0",
 	"minAppVersion": "0.12.0",
-	"description": "Toolbox with minimal plugins",
+	"description": "A bundle of minimal plugins",
 	"author": "qawatake",
 	"authorUrl": "https://github.com/qawatake",
 	"isDesktopOnly": false
