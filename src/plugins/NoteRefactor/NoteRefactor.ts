@@ -10,7 +10,7 @@ import { MinimalPlugin } from 'plugins/Shared';
 const TEMPLATE_FILE_PATH = '_templater/templates/note-composer.md';
 const CONTENT_SYNTAX = /{{content}}/g;
 const MOMENT_FORMAT = 'YYMMDD-HHmmss';
-const REGEXP_H1 = /# +([^\s]+)\r?\n/;
+const REGEXP_H1 = /# +([^\s]+)\s*/;
 
 export class NoteRefactor extends MinimalPlugin {
 	constructor(app: App) {
@@ -70,7 +70,6 @@ export class NoteRefactor extends MinimalPlugin {
 
 	private get newFileFolderPath(): string {
 		const path = this.app.vault.config.newFileFolderPath;
-		console.log(this.app.vault.config);
 		return path === undefined ? '' : path;
 	}
 
