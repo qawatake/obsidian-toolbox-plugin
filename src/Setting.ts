@@ -9,7 +9,7 @@ export interface ToolboxPluginSettings {
 type MinimalPluginMap = {
 	[id in string]: {
 		on: boolean;
-		data: Record<string, unknown>;
+		data: Record<string, unknown> | undefined;
 	};
 };
 
@@ -44,9 +44,10 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
 			const info = MINIMAL_PLUGIN_LIST[id];
 			if (!info) return;
-			const { description } = info;
+			const { name, description } = info;
 			new Setting(containerEl)
-				.setName(description)
+				.setName(name)
+				.setDesc(description)
 				.addToggle((component) => {
 					component
 						.setValue(settings.minimalPlugins[id]?.on ?? false)
@@ -62,6 +63,14 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						});
 				});
+		});
+
+		containerEl.createEl('h2', { text: 'Settings' });
+		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
+			const minimalPlugin = this.plugin.minimalPlugins[id];
+			if (!minimalPlugin) return;
+			console.log(id);
+			minimalPlugin.displaySettings(containerEl);
 		});
 	}
 }

@@ -14,7 +14,11 @@ const MOMENT_FORMAT = 'YYMMDD-HHmmss';
 const REGEXP_H1 = /# +([^\s]+)\s*/;
 
 export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
-	constructor(app: App, data: Record<string, unknown>, events: Events) {
+	constructor(
+		app: App,
+		data: Record<string, unknown> | undefined,
+		events: Events
+	) {
 		super(app, data, events);
 	}
 
@@ -39,6 +43,11 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 	override onunload(): void {
 		console.log('NoteRefactor unload');
 	}
+
+	displaySettings(containerEl: HTMLElement): void {
+		containerEl.createEl('div', { text: 'NoteRefactor' });
+	}
+
 	private async extract(editor: Editor) {
 		const template = await this.readTemplate(TEMPLATE_FILE_PATH);
 		if (template === undefined) {

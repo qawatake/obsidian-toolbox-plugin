@@ -1,13 +1,17 @@
 import { EVENT_SHOULD_SAVE } from 'Events';
 import { App, Component, Events, type Command } from 'obsidian';
 
-export class MinimalPlugin extends Component {
+export abstract class MinimalPlugin extends Component {
 	protected readonly app: App;
-	private readonly settings: Record<string, unknown>;
+	private readonly settings: Record<string, unknown> | undefined;
 	private readonly events: Events;
 	private commands: Command[] = [];
 
-	constructor(app: App, settings: Record<string, unknown>, events: Events) {
+	constructor(
+		app: App,
+		settings: Record<string, unknown> | undefined,
+		events: Events
+	) {
 		super();
 		this.app = app;
 		this.settings = settings;
@@ -22,11 +26,21 @@ export class MinimalPlugin extends Component {
 		return this.commands;
 	}
 
-	loadSettings(): Record<string, unknown> {
+	loadSettings(): Record<string, unknown> | undefined {
 		return this.settings;
 	}
 
 	requestSaveSettings() {
 		this.events.trigger(EVENT_SHOULD_SAVE);
 	}
+
+	abstract displaySettings(containerEl: HTMLElement): void;
+}
+
+export interface IMinimalPlugin {
+	new (
+		app: App,
+		settings: Record<string, unknown> | undefined,
+		events: Events
+	): MinimalPlugin;
 }
