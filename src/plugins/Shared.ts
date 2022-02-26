@@ -1,18 +1,20 @@
 import { EVENT_SHOULD_SAVE } from 'Events';
-import { App, Component, Events, type Command } from 'obsidian';
+import { App, Component, Events, Notice, type Command } from 'obsidian';
 
 export abstract class MinimalPlugin extends Component {
 	protected readonly app: App;
+	private readonly data: MinimalPluginSettings | undefined;
 	private readonly events: Events;
 	private commands: Command[] = [];
 
 	constructor(
 		app: App,
-		_settings: MinimalPluginSettings | undefined,
+		data: MinimalPluginSettings | undefined,
 		events: Events
 	) {
 		super();
 		this.app = app;
+		this.data = data;
 		this.events = events;
 	}
 
@@ -22,6 +24,17 @@ export abstract class MinimalPlugin extends Component {
 
 	public listCommands(): Command[] {
 		return this.commands;
+	}
+
+	loadSettings<T>(cb: (obj: unknown) => obj is T): T {
+		if (cb(this.data)) {
+			return this.data;
+		} else {
+			const msg = '[ERROR in Toolbox]: failed to load settings';
+			new Notice(msg);
+			console.log(msg, 'minimal plugin:', this, 'data:', this.data);
+			throw new Error(msg);
+		}
 	}
 
 	requestSaveSettings() {

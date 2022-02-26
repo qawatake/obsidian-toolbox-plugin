@@ -1,10 +1,8 @@
 import {
 	TFile,
 	moment,
-	type App,
 	type Editor,
 	type MarkdownView,
-	Events,
 	Setting,
 	Notice,
 } from 'obsidian';
@@ -19,7 +17,7 @@ const DEFAULT_TEMPLATE = '{{content}}';
 const CONTENT_SYNTAX = /{{content}}/g;
 const REGEXP_H1 = /# +([^\s]+)\s*/;
 
-interface NoteRefactorSettings extends Record<string, unknown> {
+interface NoteRefactorSettings extends MinimalPluginSettings {
 	templatePath: string;
 	newFileFolderPath: string;
 	fileNameFormat: string;
@@ -32,25 +30,11 @@ export const DEFAULT_SETTINGS: NoteRefactorSettings = {
 };
 
 export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
-	settings: NoteRefactorSettings;
-	constructor(
-		app: App,
-		data: MinimalPluginSettings | undefined,
-		events: Events
-	) {
-		super(app, data, events);
-		if (!isNoteRefactorSettings(data)) {
-			new Notice(
-				`[ERROR in Toolbox] failed to load settings in NoteRefactor`
-			);
-			throw new Error(
-				`[ERROR in Toolbox] failed to load settings: ${data}`
-			);
-		}
-		this.settings = data;
-	}
+	settings: NoteRefactorSettings = DEFAULT_SETTINGS;
 
 	override onload(): void {
+		this.settings = this.loadSettings(isNoteRefactorSettings);
+
 		console.log('NoteRefactor load');
 		this.addCommand({
 			id: 'split-file',
@@ -73,15 +57,16 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 	}
 
 	displaySettings(containerEl: HTMLElement): void {
+		const { settings } = this;
 		new Setting(containerEl)
 			.setName('Template file location')
 			.addSearch((component) => {
 				new FileSuggest(this.app, component.inputEl);
 				component
 					.setPlaceholder('Example: folder1/note')
-					.setValue(this.settings.templatePath)
+					.setValue(settings.templatePath)
 					.onChange((path) => {
-						this.settings.templatePath = path;
+						settings.templatePath = path;
 						this.requestSaveSettings();
 					});
 			});
@@ -92,9 +77,9 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 				new FolderSuggest(this.app, component.inputEl);
 				component
 					.setPlaceholder('Example: folder1/folder2')
-					.setValue(this.settings.newFileFolderPath)
+					.setValue(settings.newFileFolderPath)
 					.onChange((path) => {
-						this.settings.newFileFolderPath = path;
+						settings.newFileFolderPath = path;
 						this.requestSaveSettings();
 					});
 			});
@@ -102,22 +87,16 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 		new Setting(containerEl)
 			.setName('File name format')
 			.addText((component) => {
-				component
-					.setValue(this.settings.fileNameFormat)
-					.onChange((path) => {
-						this.settings.fileNameFormat = path;
-						this.requestSaveSettings();
-					});
+				component.setValue(settings.fileNameFormat).onChange((path) => {
+					settings.fileNameFormat = path;
+					this.requestSaveSettings();
+				});
 			});
 	}
 
 	private async extract(editor: Editor) {
-		const template = await this.readTemplate(this.settings.templatePath);
-		if (template === undefined) {
-			throw new Error(
-				`Toolbox: failed to read template: ${this.settings.templatePath}`
-			);
-		}
+		const { settings } = this;
+		const template = await this.readTemplate(settings.templatePath);
 		const extracted = editor.getSelection();
 		const content = this.generateContent(template, extracted);
 
@@ -144,14 +123,16 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 	}
 
 	private get newFilePath(): string {
+		const { settings } = this;
 		return `${this.newFileFolderPath}/${(moment as any)(
 			moment.now()
-		).format(this.settings.fileNameFormat)}.md`;
+		).format(settings.fileNameFormat)}.md`;
 	}
 
 	private get newFileFolderPath(): string {
-		if (this.settings.newFileFolderPath !== '')
-			return this.settings.newFileFolderPath;
+		const { settings } = this;
+		if (settings.newFileFolderPath !== '')
+			return settings.newFileFolderPath;
 		const path = this.app.vault.config.newFileFolderPath;
 		return path === undefined ? '' : path;
 	}
