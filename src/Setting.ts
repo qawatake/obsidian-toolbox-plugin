@@ -7,13 +7,21 @@ export interface ToolboxPluginSettings {
 }
 
 type MinimalPluginMap = {
-	[id in string]: boolean;
+	[id in string]: {
+		on: boolean;
+		data: Record<string, unknown> | undefined;
+	};
 };
 
 export function defaultSettings(): ToolboxPluginSettings {
 	const settings: ToolboxPluginSettings = { minimalPlugins: {} };
 	Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
-		settings.minimalPlugins[id] = false;
+		const info = MINIMAL_PLUGIN_LIST[id];
+		if (!info) return;
+		settings.minimalPlugins[id] = {
+			on: false,
+			data: info.defaultData,
+		};
 	});
 	return settings;
 }
@@ -36,22 +44,36 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
 			const info = MINIMAL_PLUGIN_LIST[id];
 			if (!info) return;
-			const { description } = info;
+			const { name, description } = info;
 			new Setting(containerEl)
-				.setName(description)
+				.setName(name)
+				.setDesc(description)
 				.addToggle((component) => {
 					component
-						.setValue(settings.minimalPlugins[id] ?? false)
+						.setValue(settings.minimalPlugins[id]?.on ?? false)
 						.onChange(async (value) => {
-							settings.minimalPlugins[id] = value;
+							const minimalPlugin = settings.minimalPlugins[id];
+							if (minimalPlugin === undefined) return;
+							minimalPlugin.on = value;
 							if (value) {
 								this.plugin.enableMinimalPlugin(id);
 							} else {
 								this.plugin.disableMinimalPlugin(id);
 							}
 							await this.plugin.saveSettings();
+							this.display();
 						});
 				});
+		});
+
+		containerEl.createEl('h2', { text: 'Settings' });
+		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
+			const minimalPlugin = this.plugin.minimalPlugins[id];
+			if (!minimalPlugin) return;
+			const info = MINIMAL_PLUGIN_LIST[id];
+			if (!info?.defaultData) return;
+			containerEl.createEl('h3', { text: info.name });
+			minimalPlugin.displaySettings(containerEl);
 		});
 	}
 }

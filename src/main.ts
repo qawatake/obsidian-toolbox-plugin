@@ -8,25 +8,36 @@ import {
 	type ToolboxPluginSettings,
 } from 'Setting';
 import { deepMerge } from 'utils/Util';
+import { ToolboxEvents } from 'Events';
 
 export default class ToolboxPlugin extends Plugin {
 	settings: ToolboxPluginSettings | undefined;
+	events: ToolboxEvents | undefined;
 	minimalPlugins: {
 		[id: string]: MinimalPlugin;
 	} = {};
 
 	override async onload() {
-		await this.loadSettings();
+		this.settings = await this.loadSettings();
+		console.log(this.settings);
+		this.events = new ToolboxEvents();
 
-		this.loadMinimalPlugins();
+		this.registerEvent(
+			this.events.on('should-save', () => {
+				console.log('save!');
+				this.saveSettings();
+			})
+		);
+
+		this.loadMinimalPlugins(this.settings, this.events);
 
 		this.addSettingTab(new ToolboxPluginSettingTab(this.app, this));
 	}
 
 	// override onunload() {}
 
-	private async loadSettings() {
-		this.settings = deepMerge(defaultSettings(), await this.loadData());
+	private async loadSettings(): Promise<ToolboxPluginSettings> {
+		return deepMerge(defaultSettings(), await this.loadData());
 	}
 
 	async saveSettings() {
@@ -34,11 +45,19 @@ export default class ToolboxPlugin extends Plugin {
 	}
 
 	enableMinimalPlugin(id: string) {
+		const { settings, events } = this;
+		if (settings === undefined || events === undefined) {
+			throw new Error(
+				`[ERROR in Toolbox] failed to fetch settings or events`
+			);
+		}
 		const info = MINIMAL_PLUGIN_LIST[id];
 		if (info === undefined) return;
+		const data = this.settings?.minimalPlugins[id]?.data;
+		if (data === undefined) return;
 		const { generator } = info;
 		this.disableMinimalPlugin(id);
-		const minimalPlugin = new generator(this.app);
+		const minimalPlugin = new generator(this.app, data, events);
 		this.minimalPlugins[id] = minimalPlugin;
 		this.addChild(minimalPlugin);
 		this.addMinimalCommands(minimalPlugin);
@@ -66,10 +85,13 @@ export default class ToolboxPlugin extends Plugin {
 		});
 	}
 
-	private loadMinimalPlugins() {
+	private loadMinimalPlugins(
+		_settings: ToolboxPluginSettings,
+		_events: ToolboxEvents
+	) {
 		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
-			const ok = this.settings?.minimalPlugins[id];
-			if (ok) {
+			const minimalPlugin = this.settings?.minimalPlugins[id];
+			if (minimalPlugin?.on) {
 				this.enableMinimalPlugin(id);
 			}
 		});
