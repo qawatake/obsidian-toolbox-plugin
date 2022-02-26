@@ -19,8 +19,15 @@ export default class ToolboxPlugin extends Plugin {
 
 	override async onload() {
 		this.settings = await this.loadSettings();
-
+		console.log(this.settings);
 		this.events = new ToolboxEvents();
+
+		this.registerEvent(
+			this.events.on('should-save', () => {
+				console.log('save!');
+				this.saveSettings();
+			})
+		);
 
 		this.loadMinimalPlugins(this.settings, this.events);
 
@@ -46,7 +53,7 @@ export default class ToolboxPlugin extends Plugin {
 		}
 		const info = MINIMAL_PLUGIN_LIST[id];
 		if (info === undefined) return;
-		const data = this.settings?.minimalPlugins[id];
+		const data = this.settings?.minimalPlugins[id]?.data;
 		if (data === undefined) return;
 		const { generator } = info;
 		this.disableMinimalPlugin(id);

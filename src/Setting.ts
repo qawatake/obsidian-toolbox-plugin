@@ -61,6 +61,7 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 								this.plugin.disableMinimalPlugin(id);
 							}
 							await this.plugin.saveSettings();
+							this.display();
 						});
 				});
 		});
@@ -69,7 +70,9 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 		Object.keys(MINIMAL_PLUGIN_LIST).forEach((id) => {
 			const minimalPlugin = this.plugin.minimalPlugins[id];
 			if (!minimalPlugin) return;
-			console.log(id);
+			const info = MINIMAL_PLUGIN_LIST[id];
+			if (!info?.defaultData) return;
+			containerEl.createEl('h3', { text: info.name });
 			minimalPlugin.displaySettings(containerEl);
 		});
 	}
