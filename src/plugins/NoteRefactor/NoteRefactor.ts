@@ -4,6 +4,7 @@ import {
 	type App,
 	type Editor,
 	type MarkdownView,
+	Events,
 } from 'obsidian';
 import { MinimalPlugin } from 'plugins/Shared';
 
@@ -12,9 +13,9 @@ const CONTENT_SYNTAX = /{{content}}/g;
 const MOMENT_FORMAT = 'YYMMDD-HHmmss';
 const REGEXP_H1 = /# +([^\s]+)\s*/;
 
-export class NoteRefactor extends MinimalPlugin {
-	constructor(app: App) {
-		super(app);
+export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
+	constructor(app: App, data: Record<string, unknown>, events: Events) {
+		super(app, data, events);
 	}
 
 	override onload(): void {

@@ -1,10 +1,10 @@
-import { Notice, type App } from 'obsidian';
+import { Events, Notice, type App } from 'obsidian';
 import { MinimalPlugin } from 'plugins/Shared';
 import { generateInternalLinkFrom } from 'plugins/CopyWikiLink/Link';
 
-export class CopyWikiLink extends MinimalPlugin {
-	constructor(app: App) {
-		super(app);
+export class CopyWikiLink extends MinimalPlugin implements MinimalPlugin {
+	constructor(app: App, data: Record<string, unknown>, events: Events) {
+		super(app, data, events);
 	}
 
 	override onload(): void {
