@@ -15,7 +15,7 @@ import { FileSuggest, FolderSuggest } from 'utils/suggesters/FileSuggester';
 
 const DEFAULT_TEMPLATE = '{{content}}';
 const CONTENT_SYNTAX = /{{content}}/g;
-const REGEXP_H1 = /# +([^\s][^\r\n]*)((\r?\n)|$)]/;
+const REGEXP_H1 = /# +([^\s][^\r\n]*)((\r?\n)|$)/;
 
 interface NoteRefactorSettings extends MinimalPluginSettings {
 	templatePath: string;
