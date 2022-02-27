@@ -54,7 +54,6 @@ export default class ToolboxPlugin extends Plugin {
 		const info = MINIMAL_PLUGIN_LIST[id];
 		if (info === undefined) return;
 		const data = this.settings?.minimalPlugins[id]?.data;
-		if (data === undefined) return;
 		const { generator } = info;
 		this.disableMinimalPlugin(id);
 		const minimalPlugin = new generator(this.app, data, events);

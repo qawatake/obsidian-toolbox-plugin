@@ -52,9 +52,9 @@ export class ToolboxPluginSettingTab extends PluginSettingTab {
 					component
 						.setValue(settings.minimalPlugins[id]?.on ?? false)
 						.onChange(async (value) => {
-							const minimalPlugin = settings.minimalPlugins[id];
-							if (minimalPlugin === undefined) return;
-							minimalPlugin.on = value;
+							const info = settings.minimalPlugins[id];
+							if (info === undefined) return;
+							info.on = value;
 							if (value) {
 								this.plugin.enableMinimalPlugin(id);
 							} else {
