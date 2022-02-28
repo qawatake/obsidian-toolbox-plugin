@@ -1,3 +1,4 @@
+import { Setting } from 'obsidian';
 import {
 	MinimalPlugin,
 	type MinimalPluginSettings,
@@ -26,7 +27,56 @@ export class Cloudinary extends MinimalPlugin {
 	}
 
 	displaySettings(containerEl: HTMLElement): void {
-		containerEl.createDiv({ text: 'Cloudinary' });
+		let cloudName: string;
+		new Setting(containerEl)
+			.setName('Cloud name')
+			.addText((component) => {
+				component.onChange((value) => {
+					cloudName = value;
+				});
+			})
+			.addButton((component) => {
+				component.setButtonText('Save').onClick(() => {
+					this.settings.cloudName = cloudName;
+					this.requestSaveSettings();
+				});
+			});
+
+		let apiKeyInputEl: HTMLInputElement;
+		let apiKey: string;
+		new Setting(containerEl)
+			.setName('API key')
+			.addText((component) => {
+				apiKeyInputEl = component.inputEl;
+				component.onChange((value) => {
+					apiKey = value;
+				});
+			})
+			.addButton((component) => {
+				component.setButtonText('Save').onClick(() => {
+					this.settings.apiKey = apiKey;
+					apiKeyInputEl.value = '';
+					this.requestSaveSettings();
+				});
+			});
+
+		let apiSecretInputEl: HTMLInputElement;
+		let apiSecret: string;
+		new Setting(containerEl)
+			.setName('API secret')
+			.addText((component) => {
+				apiSecretInputEl = component.inputEl;
+				component.onChange((value) => {
+					apiSecret = value;
+				});
+			})
+			.addButton((component) => {
+				component.setButtonText('Save').onClick(() => {
+					this.settings.apiSecret = apiSecret;
+					apiSecretInputEl.value = '';
+					this.requestSaveSettings();
+				});
+			});
 	}
 }
 
