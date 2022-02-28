@@ -7,12 +7,16 @@ import {
 import { cloudinaryApi, type CloudinaryApi } from './CloudinaryApi';
 
 interface CloudinarySettings extends MinimalPluginSettings {
+	defaultWidth: number;
+	defaultFormat: string;
 	cloudName: string;
 	apiKey: string;
 	apiSecret: string;
 }
 
 export const DEFAULT_SETTINGS: CloudinarySettings = {
+	defaultWidth: 600,
+	defaultFormat: 'webp',
 	cloudName: '',
 	apiKey: '',
 	apiSecret: '',
@@ -37,6 +41,33 @@ export class Cloudinary extends MinimalPlugin {
 	}
 
 	displaySettings(containerEl: HTMLElement): void {
+		new Setting(containerEl)
+			.setName('Default width (px)')
+			.addText((component) => {
+				component
+					.setValue(this.settings.defaultWidth.toString())
+					.onChange((value) => {
+						const width = Number.parseInt(value);
+						if (!Number.isInteger(width)) return;
+						this.settings.defaultWidth = width;
+						this.requestSaveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Default format')
+			.addText((component) => {
+				component
+					.setValue(this.settings.defaultFormat)
+					.onChange((value) => {
+						const dotTrimmedExtension = value
+							.trim()
+							.replace(/$\./, '');
+						this.settings.defaultFormat = dotTrimmedExtension;
+						this.requestSaveSettings();
+					});
+			});
+
 		let cloudName: string;
 		new Setting(containerEl)
 			.setName('Cloud name')
@@ -140,13 +171,38 @@ export class Cloudinary extends MinimalPlugin {
 				}
 				const gotUrl = result?.secure_url;
 				if (gotUrl === undefined) return;
-				await navigator.clipboard.writeText(
-					`![${file.name}](${gotUrl})`
+				const formattedUrl = this.formatCloudinaryUrl(
+					gotUrl,
+					this.settings.defaultWidth,
+					this.settings.defaultFormat
 				);
-				new Notice(`Copy link for ${file.name}!`);
+				const basename = file.name.replace(/\.[a-z]+$/, '');
+				await navigator.clipboard.writeText(
+					`![${basename}](${formattedUrl})`
+				);
+				new Notice(`Copy link for ${basename}!`);
 			});
 		};
 		reader.readAsDataURL(file);
+	}
+
+	private formatCloudinaryUrl(
+		originalUrl: string,
+		width: number,
+		extension: string
+	): string {
+		const url = new URL(originalUrl);
+		const splittedPath = url.pathname.split('/');
+		const newPath = [
+			splittedPath.slice(1, 4),
+			`w_${width}`,
+			splittedPath.slice(4),
+		].join('/');
+		url.pathname = newPath;
+		// url.href replaces '/' with ','. I don't know why. So I explicitly replace ',' with '/'.
+		return url.href
+			.replace(/,/g, '/')
+			.replace(/\.[a-z]+$/, '.' + extension);
 	}
 }
 
