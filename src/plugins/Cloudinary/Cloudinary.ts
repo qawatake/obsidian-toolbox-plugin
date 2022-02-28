@@ -157,6 +157,12 @@ export class Cloudinary extends MinimalPlugin {
 	}
 
 	private handleImportedFile(file: File) {
+		if (!file.type.startsWith('image/')) {
+			new Notice(
+				`[ERROR in Toolbox]: ${file.name} is not an image file.`
+			);
+			return;
+		}
 		const reader = new FileReader();
 		reader.onload = (evt) => {
 			const url = evt.target?.result;
