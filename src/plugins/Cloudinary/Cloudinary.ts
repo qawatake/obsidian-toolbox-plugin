@@ -89,6 +89,7 @@ export class Cloudinary extends MinimalPlugin {
 			.addButton((component) => {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.cloudName = cloudName;
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
@@ -107,6 +108,7 @@ export class Cloudinary extends MinimalPlugin {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.apiKey = apiKey;
 					apiKeyInputEl.value = '';
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
@@ -125,6 +127,7 @@ export class Cloudinary extends MinimalPlugin {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.apiSecret = apiSecret;
 					apiSecretInputEl.value = '';
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
@@ -235,8 +238,12 @@ function isCloudinarySettings(obj: unknown): obj is CloudinarySettings {
 	if (typeof obj !== 'object') return false;
 	if (obj === null) return false;
 
-	const { cloudName, apiKey, apiSecret } =
+	const { defaultWidth, defaultFormat, cloudName, apiKey, apiSecret } =
 		obj as UnknownObject<CloudinarySettings>;
+	const validDefaultWidth =
+		typeof defaultWidth === 'number' && Number.isInteger(defaultWidth);
+	if (!validDefaultWidth) return false;
+	if (typeof defaultFormat !== 'string') return false;
 	if (typeof cloudName !== 'string') return false;
 	if (typeof apiKey !== 'string') return false;
 	if (typeof apiSecret !== 'string') return false;
