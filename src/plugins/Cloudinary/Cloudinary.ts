@@ -1,4 +1,4 @@
-import { Setting } from 'obsidian';
+import { Notice, Setting } from 'obsidian';
 import {
 	MinimalPlugin,
 	type MinimalPluginSettings,
@@ -28,15 +28,10 @@ export class Cloudinary extends MinimalPlugin {
 		console.log('Cloudinary load');
 
 		this.addCommand({
-			id: 'cloudinary-upload',
-			name: 'Upload from clipboard to Cloudinary',
-			callback: async () => {
-				const filePath = await navigator.clipboard.readText();
-				this.api.upload(filePath, (err, result) => {
-					console.log(err, result);
-					if (!result?.secure_url) return;
-					navigator.clipboard.writeText(`![](result.secure_url)`);
-				});
+			id: 'cloudinary-upload-dialog',
+			name: 'Upload to Cloudinary',
+			callback: () => {
+				this.showImportDialog();
 			},
 		});
 	}
@@ -101,6 +96,57 @@ export class Cloudinary extends MinimalPlugin {
 			api_key: apiKey,
 			api_secret: apiSecret,
 		});
+	}
+
+	private showImportDialog() {
+		const inputEl = createEl('input', { type: 'file' });
+
+		inputEl.multiple = true;
+		inputEl.addEventListener('change', async () => {
+			const files = inputEl.files;
+			this.handleImportedFiles(files);
+
+			inputEl.remove();
+		});
+		inputEl.click();
+	}
+
+	private handleImportedFiles(files: FileList | null) {
+		if (files === null || files.length === 0) {
+			return;
+		}
+
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			if (file === undefined) {
+				continue;
+			}
+			this.handleImportedFile(file);
+		}
+	}
+
+	private handleImportedFile(file: File) {
+		const reader = new FileReader();
+		reader.onload = (evt) => {
+			const url = evt.target?.result;
+			if (typeof url !== 'string') return;
+			this.api.upload(url, async (err, result) => {
+				if (err !== undefined) {
+					new Notice(
+						`[ERROR in Toolbox] failed to upload ${file.name}. See console.`
+					);
+					console.log(err);
+					return;
+				}
+				const gotUrl = result?.secure_url;
+				if (gotUrl === undefined) return;
+				await navigator.clipboard.writeText(
+					`![${file.name}](${gotUrl})`
+				);
+				new Notice(`Copy link for ${file.name}!`);
+			});
+		};
+		reader.readAsDataURL(file);
 	}
 }
 

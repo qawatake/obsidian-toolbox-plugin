@@ -11,7 +11,7 @@ import {
 export interface CloudinaryApi {
 	config(new_config?: boolean | ConfigOptions): ConfigOptions;
 	upload(
-		file: string,
+		absoluteFilePath: string,
 		callback?: UploadResponseCallback
 	): Promise<UploadApiResponse>;
 	upload(
