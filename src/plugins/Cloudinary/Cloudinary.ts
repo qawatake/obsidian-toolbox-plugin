@@ -89,6 +89,7 @@ export class Cloudinary extends MinimalPlugin {
 			.addButton((component) => {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.cloudName = cloudName;
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
@@ -107,6 +108,7 @@ export class Cloudinary extends MinimalPlugin {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.apiKey = apiKey;
 					apiKeyInputEl.value = '';
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
@@ -125,6 +127,7 @@ export class Cloudinary extends MinimalPlugin {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.apiSecret = apiSecret;
 					apiSecretInputEl.value = '';
+					this.setApiConfig();
 					this.requestSaveSettings();
 				});
 			});
