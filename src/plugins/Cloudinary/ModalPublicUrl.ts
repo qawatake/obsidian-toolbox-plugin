@@ -34,7 +34,8 @@ export class ModalPublicUrl extends Modal {
 	}
 
 	private setHotkey(inputEl: HTMLInputElement) {
-		this.scope.register([], 'Enter', () => {
+		this.scope.register([], 'Enter', (evt) => {
+			evt.preventDefault();
 			const url = inputEl.value;
 			this.plugin.api.upload(
 				url,
