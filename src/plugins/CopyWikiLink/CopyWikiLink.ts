@@ -1,16 +1,8 @@
-import { Events, Notice, type App } from 'obsidian';
 import { MinimalPlugin } from 'plugins/Shared';
 import { generateInternalLinkFrom } from 'plugins/CopyWikiLink/Link';
+import { Notice } from 'obsidian';
 
 export class CopyWikiLink extends MinimalPlugin implements MinimalPlugin {
-	constructor(
-		app: App,
-		data: Record<string, unknown> | undefined,
-		events: Events
-	) {
-		super(app, data, events);
-	}
-
 	override onload(): void {
 		console.log('CopyWikiLink load');
 
@@ -38,7 +30,6 @@ export class CopyWikiLink extends MinimalPlugin implements MinimalPlugin {
 	}
 
 	displaySettings(containerEl: HTMLElement): void {
-		console.log('x');
 		containerEl.createEl('div', { text: 'Copy wiki link' });
 	}
 }

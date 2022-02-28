@@ -19,7 +19,6 @@ export default class ToolboxPlugin extends Plugin {
 
 	override async onload() {
 		this.settings = await this.loadSettings();
-		console.log(this.settings);
 		this.events = new ToolboxEvents();
 
 		this.registerEvent(
