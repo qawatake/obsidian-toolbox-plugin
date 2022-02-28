@@ -4,6 +4,7 @@ import {
 	type MinimalPluginSettings,
 	type UnknownObject,
 } from 'plugins/Shared';
+import { cloudinaryApi, type CloudinaryApi } from './CloudinaryApi';
 
 interface CloudinarySettings extends MinimalPluginSettings {
 	cloudName: string;
@@ -19,11 +20,25 @@ export const DEFAULT_SETTINGS: CloudinarySettings = {
 
 export class Cloudinary extends MinimalPlugin {
 	settings: CloudinarySettings = DEFAULT_SETTINGS;
+	api: CloudinaryApi = cloudinaryApi;
 
 	override onload(): void {
 		this.settings = this.loadSettings(isCloudinarySettings);
-
+		this.setApiConfig();
 		console.log('Cloudinary load');
+
+		this.addCommand({
+			id: 'cloudinary-upload',
+			name: 'Upload from clipboard to Cloudinary',
+			callback: async () => {
+				const filePath = await navigator.clipboard.readText();
+				this.api.upload(filePath, (err, result) => {
+					console.log(err, result);
+					if (!result?.secure_url) return;
+					navigator.clipboard.writeText(`![](result.secure_url)`);
+				});
+			},
+		});
 	}
 
 	displaySettings(containerEl: HTMLElement): void {
@@ -77,6 +92,15 @@ export class Cloudinary extends MinimalPlugin {
 					this.requestSaveSettings();
 				});
 			});
+	}
+
+	private setApiConfig() {
+		const { cloudName, apiKey, apiSecret } = this.settings;
+		this.api.config({
+			cloud_name: cloudName,
+			api_key: apiKey,
+			api_secret: apiSecret,
+		});
 	}
 }
 
