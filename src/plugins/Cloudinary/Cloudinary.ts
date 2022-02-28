@@ -1,3 +1,4 @@
+import type { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 import { Notice, Setting } from 'obsidian';
 import {
 	MinimalPlugin,
@@ -5,6 +6,7 @@ import {
 	type UnknownObject,
 } from 'plugins/Shared';
 import { cloudinaryApi, type CloudinaryApi } from './CloudinaryApi';
+import { ModalPublicUrl } from './ModalPublicUrl';
 
 interface CloudinarySettings extends MinimalPluginSettings {
 	defaultWidth: number;
@@ -36,6 +38,14 @@ export class Cloudinary extends MinimalPlugin {
 			name: 'Upload to Cloudinary',
 			callback: () => {
 				this.showImportDialog();
+			},
+		});
+
+		this.addCommand({
+			id: 'cloudinary-upload-clipboard',
+			name: 'Upload to Cloudinary from public URL',
+			callback: () => {
+				new ModalPublicUrl(this.app, this).open();
 			},
 		});
 	}
@@ -167,29 +177,38 @@ export class Cloudinary extends MinimalPlugin {
 		reader.onload = (evt) => {
 			const url = evt.target?.result;
 			if (typeof url !== 'string') return;
-			this.api.upload(url, async (err, result) => {
-				if (err !== undefined) {
-					new Notice(
-						`[ERROR in Toolbox] failed to upload ${file.name}. See console.`
-					);
-					console.log(err);
-					return;
-				}
-				const gotUrl = result?.secure_url;
-				if (gotUrl === undefined) return;
-				const formattedUrl = this.formatCloudinaryUrl(
-					gotUrl,
-					this.settings.defaultWidth,
-					this.settings.defaultFormat
-				);
-				const basename = file.name.replace(/\.[a-z]+$/, '');
-				await navigator.clipboard.writeText(
-					`![${basename}](${formattedUrl})`
-				);
-				new Notice(`Copy link for ${basename}!`);
-			});
+			this.api.upload(url, this.onCloudinaryUploadResponse(file.name));
 		};
 		reader.readAsDataURL(file);
+	}
+
+	onCloudinaryUploadResponse(
+		fileName: string
+	): (
+		err?: UploadApiErrorResponse,
+		result?: UploadApiResponse
+	) => Promise<void> {
+		return async (err, result) => {
+			if (err !== undefined) {
+				new Notice(
+					`[ERROR in Toolbox] failed to upload ${fileName}. See console.`
+				);
+				console.log(err);
+				return;
+			}
+			const gotUrl = result?.secure_url;
+			if (gotUrl === undefined) return;
+			const formattedUrl = this.formatCloudinaryUrl(
+				gotUrl,
+				this.settings.defaultWidth,
+				this.settings.defaultFormat
+			);
+			const basename = fileName.replace(/\.[a-z]+$/, '');
+			await navigator.clipboard.writeText(
+				`![${basename}](${formattedUrl})`
+			);
+			new Notice(`Copy link for ${basename}!`);
+		};
 	}
 
 	private formatCloudinaryUrl(
