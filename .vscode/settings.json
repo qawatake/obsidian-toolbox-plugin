@@ -22,6 +22,7 @@
 	"eslint.validate": ["svelte"],
 	"cSpell.words": [
 		"builtins",
+		"Cloudinary",
 		"esbuild",
 		"Linktex",
 		"Linktext",

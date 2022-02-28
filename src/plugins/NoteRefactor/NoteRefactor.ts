@@ -158,6 +158,7 @@ export class NoteRefactor extends MinimalPlugin implements MinimalPlugin {
 
 function isNoteRefactorSettings(obj: unknown): obj is NoteRefactorSettings {
 	if (typeof obj !== 'object') return false;
+	if (obj === null) return false;
 
 	const { templatePath, fileNameFormat } =
 		obj as UnknownObject<NoteRefactorSettings>;
