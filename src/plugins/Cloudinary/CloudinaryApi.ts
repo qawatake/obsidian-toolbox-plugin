@@ -1,4 +1,5 @@
 import { moment, Notice } from 'obsidian';
+import type { UnknownObject } from 'plugins/Shared';
 
 interface CloudinaryApiConfig {
 	cloudName: string;
@@ -9,6 +10,25 @@ interface CloudinaryApiConfig {
 interface CloudinaryAuthSignature {
 	timestamp: number;
 	signature: string;
+}
+
+interface CloudinaryAPI_2 {
+	upload(
+		publicURL: string,
+		responseCallback: (err: any, result: CloudinaryResponseResult) => any
+	): void;
+}
+
+interface CloudinaryResponseError {
+	error: {
+		message: string;
+	};
+}
+
+interface CloudinaryResponseResult {
+	original_filename: string;
+	public_id: string;
+	secure_url: string;
 }
 
 export class CloudinaryApi {
@@ -36,6 +56,15 @@ export class CloudinaryApi {
 				body: formData,
 			});
 			const body = await res.json();
+			if (res.status === 200) {
+				if (isCloudinaryResponseResult(body)) {
+					console.log(body.secure_url);
+				}
+			} else if (isCloudinaryResponseError(body)) {
+				console.log(body.error.message);
+			} else {
+				console.log('unexpected error:', res.body);
+			}
 			return body.secure_url;
 		} catch (err) {
 			new Notice('[ERROR in Toolbox] failed to upload. See console.');
@@ -81,4 +110,31 @@ export class CloudinaryApi {
 			signature: hashHex,
 		};
 	}
+}
+
+function isCloudinaryResponseError(
+	obj: unknown
+): obj is CloudinaryResponseError {
+	if (typeof obj !== 'object' || obj === null) return false;
+
+	const { error } = obj as UnknownObject<CloudinaryResponseError>;
+	if (typeof error !== 'object' || error === null) return false;
+
+	const { message } = error as UnknownObject<{ message: string }>;
+	if (typeof message !== 'string') return false;
+
+	return true;
+}
+
+function isCloudinaryResponseResult(
+	obj: unknown
+): obj is CloudinaryResponseResult {
+	if (typeof obj !== 'object' || obj === null) return false;
+
+	const { secure_url, public_id, original_filename } =
+		obj as UnknownObject<CloudinaryResponseResult>;
+	if (typeof secure_url !== 'string') return false;
+	if (typeof public_id !== 'string') return false;
+	if (typeof original_filename !== 'string') return false;
+	return true;
 }
