@@ -76,6 +76,7 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 			const body = await res.json();
 			if (res.status === 200) {
 				if (isCloudinaryResponseResult(body)) {
+					console.log(body);
 					success(body);
 				}
 			} else if (isCloudinaryResponseError(body)) {
@@ -105,6 +106,7 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 		formData.append('api_key', this.apiKey);
 		const authSignature = await this.generateAuthSignature();
 		formData.append('timestamp', authSignature.timestamp.toString());
+		formData.append('ocr', 'adv_ocr:ja');
 		formData.append('signature', authSignature.signature);
 		return formData;
 	}
@@ -115,7 +117,7 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 
 	private async generateAuthSignature(): Promise<CloudinaryAuthSignature> {
 		const timestamp = moment.now();
-		const sha1Input = `timestamp=${timestamp}${this.apiSecret}`;
+		const sha1Input = `ocr=adv_ocr:ja&timestamp=${timestamp}${this.apiSecret}`;
 
 		// https://cloudinary.com/documentation/upload_images#generating_authentication_signatures
 		// https://developer.mozilla.org/ja/docs/Web/API/SubtleCrypto/digest#%E3%83%80%E3%82%A4%E3%82%B8%E3%82%A7%E3%82%B9%E3%83%88%E5%80%A4%E3%82%9216%E9%80%B2%E6%96%87%E5%AD%97%E5%88%97%E3%81%AB%E5%A4%89%E6%8F%9B%E3%81%99%E3%82%8B
