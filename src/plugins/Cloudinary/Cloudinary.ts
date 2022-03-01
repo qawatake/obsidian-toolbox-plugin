@@ -4,7 +4,12 @@ import {
 	type MinimalPluginSettings,
 	type UnknownObject,
 } from 'plugins/Shared';
-import { CloudinaryApi } from './CloudinaryApi';
+import {
+	CloudinaryDirectApi,
+	type CloudinaryApi,
+	type CloudinaryResponseCallback,
+	type CloudinaryResponseErrorCallback,
+} from './CloudinaryApi';
 import { ModalPublicUrl } from './ModalPublicUrl';
 
 interface CloudinarySettings extends MinimalPluginSettings {
@@ -134,7 +139,7 @@ export class Cloudinary extends MinimalPlugin {
 
 	private setApiConfig() {
 		const { cloudName, apiKey, apiSecret } = this.settings;
-		this.api = new CloudinaryApi({
+		this.api = new CloudinaryDirectApi({
 			cloudName,
 			apiKey,
 			apiSecret,
@@ -176,19 +181,32 @@ export class Cloudinary extends MinimalPlugin {
 			return;
 		}
 
-		const gotUrl = await this.api?.upload(file);
-		if (gotUrl === undefined) return;
+		this.api?.upload(
+			file,
+			this.onCloudinaryResponseSuccess,
+			this.onCloudinaryResponseError
+		);
+	}
+
+	onCloudinaryResponseSuccess: CloudinaryResponseCallback = (result) => {
+		const gotUrl = result.secure_url;
 		const formattedUrl = this.formatCloudinaryUrl(
 			gotUrl,
 			this.settings.defaultWidth,
 			this.settings.defaultFormat
 		);
-		const basename = file.name.replace(/\.[a-z]+$/, '');
-		await navigator.clipboard.writeText(`![${basename}](${formattedUrl})`);
-		new Notice(`Copy link for ${basename}!`);
-	}
+		navigator.clipboard.writeText(
+			`![${result.original_filename}](${formattedUrl})`
+		);
+		new Notice(`Copy link for ${result.original_filename}!`);
+	};
 
-	formatCloudinaryUrl(
+	onCloudinaryResponseError: CloudinaryResponseErrorCallback = (err) => {
+		new Notice('[ERROR in Toolbox] failed to upload. See console.');
+		console.log('[ERROR in Toolbox] failed to upload.', err.error.message);
+	};
+
+	private formatCloudinaryUrl(
 		originalUrl: string,
 		width: number,
 		extension: string

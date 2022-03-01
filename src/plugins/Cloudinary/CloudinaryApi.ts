@@ -12,12 +12,26 @@ interface CloudinaryAuthSignature {
 	signature: string;
 }
 
-interface CloudinaryAPI_2 {
+export interface CloudinaryApi {
 	upload(
-		publicURL: string,
-		responseCallback: (err: any, result: CloudinaryResponseResult) => any
-	): void;
+		publicUrl: string,
+		onSuccess: CloudinaryResponseCallback,
+		onError: CloudinaryResponseErrorCallback
+	): void | Promise<void>;
+	upload(
+		file: File,
+		onSuccess: CloudinaryResponseCallback,
+		onError: CloudinaryResponseErrorCallback
+	): void | Promise<void>;
 }
+
+export type CloudinaryResponseCallback = (
+	result: CloudinaryResponseResult
+) => void | Promise<void>;
+
+export type CloudinaryResponseErrorCallback = (
+	err: CloudinaryResponseError
+) => void | Promise<void>;
 
 interface CloudinaryResponseError {
 	error: {
@@ -31,7 +45,7 @@ interface CloudinaryResponseResult {
 	secure_url: string;
 }
 
-export class CloudinaryApi {
+export class CloudinaryDirectApi implements CloudinaryApi {
 	private readonly cloudName: string;
 	private readonly apiKey: string;
 	private readonly apiSecret: string;
@@ -46,9 +60,14 @@ export class CloudinaryApi {
 	/**
 	 *
 	 * @param fileData public URL or file object
-	 * @returns Promise of URL returned by Cloudinary
+	 * @param success callback
+	 * @param error callback
 	 */
-	async upload(fileData: File | string): Promise<string | undefined> {
+	async upload(
+		fileData: string | File,
+		success: CloudinaryResponseCallback,
+		error: CloudinaryResponseErrorCallback
+	) {
 		const formData = await this.generateFormData(fileData);
 		try {
 			const res = await fetch(this.cloudinaryUploadUrl, {
@@ -58,20 +77,49 @@ export class CloudinaryApi {
 			const body = await res.json();
 			if (res.status === 200) {
 				if (isCloudinaryResponseResult(body)) {
-					console.log(body.secure_url);
+					success(body);
 				}
 			} else if (isCloudinaryResponseError(body)) {
-				console.log(body.error.message);
+				error(body);
 			} else {
-				console.log('unexpected error:', res.body);
+				new Notice('[ERROR in Toolbox] failed to upload. See console.');
+				console.log('[ERROR in Toolbox]: unexpected error.', res.body);
 			}
-			return body.secure_url;
 		} catch (err) {
 			new Notice('[ERROR in Toolbox] failed to upload. See console.');
-			console.log(err);
-			return undefined;
+			console.log('[ERROR in Toolbox]: unexpected error.', err);
 		}
 	}
+
+	/**
+	 *
+	 * @param fileData public URL or file object
+	 * @returns Promise of URL returned by Cloudinary
+	 */
+	// async upload(fileData: File | string): Promise<string | undefined> {
+	// 	const formData = await this.generateFormData(fileData);
+	// 	try {
+	// 		const res = await fetch(this.cloudinaryUploadUrl, {
+	// 			method: 'POST',
+	// 			body: formData,
+	// 		});
+	// 		const body = await res.json();
+	// 		if (res.status === 200) {
+	// 			if (isCloudinaryResponseResult(body)) {
+	// 				console.log(body.secure_url);
+	// 			}
+	// 		} else if (isCloudinaryResponseError(body)) {
+	// 			console.log(body.error.message);
+	// 		} else {
+	// 			console.log('unexpected error:', res.body);
+	// 		}
+	// 		return body.secure_url;
+	// 	} catch (err) {
+	// 		new Notice('[ERROR in Toolbox] failed to upload. See console.');
+	// 		console.log(err);
+	// 		return undefined;
+	// 	}
+	// }
 
 	/**
 	 * @param fileData public URL or file object

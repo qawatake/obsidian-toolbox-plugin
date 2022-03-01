@@ -1,4 +1,4 @@
-import { App, Modal, Notice } from 'obsidian';
+import { App, Modal } from 'obsidian';
 import type { Cloudinary } from './Cloudinary';
 
 export class ModalPublicUrl extends Modal {
@@ -37,26 +37,12 @@ export class ModalPublicUrl extends Modal {
 		this.scope.register([], 'Enter', (evt) => {
 			evt.preventDefault();
 			const url = inputEl.value;
-			(async () => {
-				const gotUrl = await this.plugin.api?.upload(url);
-				if (gotUrl === undefined) return;
-				const formattedUrl = this.plugin.formatCloudinaryUrl(
-					gotUrl,
-					this.plugin.settings.defaultWidth,
-					this.plugin.settings.defaultFormat
-				);
-				const fileName = this.fileNameFromUrl(url);
-				await navigator.clipboard.writeText(
-					`![${fileName}](${formattedUrl})`
-				);
-				new Notice(`Copy link for ${fileName}!`);
-			})();
+			this.plugin.api?.upload(
+				url,
+				this.plugin.onCloudinaryResponseSuccess,
+				this.plugin.onCloudinaryResponseError
+			);
 			this.close();
 		});
-	}
-
-	private fileNameFromUrl(publicUrl: string): string {
-		const url = new URL(publicUrl);
-		return url.pathname.split('/').last() ?? '';
 	}
 }
