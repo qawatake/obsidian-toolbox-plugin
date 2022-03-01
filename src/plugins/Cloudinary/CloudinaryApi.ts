@@ -40,7 +40,6 @@ interface CloudinaryResponseError {
 }
 
 interface CloudinaryResponseResult {
-	original_filename: string;
 	public_id: string;
 	secure_url: string;
 }
@@ -96,30 +95,6 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 	 * @param fileData public URL or file object
 	 * @returns Promise of URL returned by Cloudinary
 	 */
-	// async upload(fileData: File | string): Promise<string | undefined> {
-	// 	const formData = await this.generateFormData(fileData);
-	// 	try {
-	// 		const res = await fetch(this.cloudinaryUploadUrl, {
-	// 			method: 'POST',
-	// 			body: formData,
-	// 		});
-	// 		const body = await res.json();
-	// 		if (res.status === 200) {
-	// 			if (isCloudinaryResponseResult(body)) {
-	// 				console.log(body.secure_url);
-	// 			}
-	// 		} else if (isCloudinaryResponseError(body)) {
-	// 			console.log(body.error.message);
-	// 		} else {
-	// 			console.log('unexpected error:', res.body);
-	// 		}
-	// 		return body.secure_url;
-	// 	} catch (err) {
-	// 		new Notice('[ERROR in Toolbox] failed to upload. See console.');
-	// 		console.log(err);
-	// 		return undefined;
-	// 	}
-	// }
 
 	/**
 	 * @param fileData public URL or file object
@@ -152,7 +127,6 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 		const hashHex = hashArray
 			.map((b) => b.toString(16).padStart(2, '0'))
 			.join('');
-		console.log(hashHex);
 		return {
 			timestamp,
 			signature: hashHex,
@@ -179,10 +153,9 @@ function isCloudinaryResponseResult(
 ): obj is CloudinaryResponseResult {
 	if (typeof obj !== 'object' || obj === null) return false;
 
-	const { secure_url, public_id, original_filename } =
+	const { secure_url, public_id } =
 		obj as UnknownObject<CloudinaryResponseResult>;
 	if (typeof secure_url !== 'string') return false;
 	if (typeof public_id !== 'string') return false;
-	if (typeof original_filename !== 'string') return false;
 	return true;
 }

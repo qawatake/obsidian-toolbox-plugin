@@ -195,16 +195,23 @@ export class Cloudinary extends MinimalPlugin {
 			this.settings.defaultWidth,
 			this.settings.defaultFormat
 		);
-		navigator.clipboard.writeText(
-			`![${result.original_filename}](${formattedUrl})`
+		const originalFileName = this.originalFileNameFromPublicId(
+			result.public_id
 		);
-		new Notice(`Copy link for ${result.original_filename}!`);
+		navigator.clipboard.writeText(
+			`![${originalFileName}](${formattedUrl})`
+		);
+		new Notice(`Copy link for ${originalFileName}!`);
 	};
 
 	onCloudinaryResponseError: CloudinaryResponseErrorCallback = (err) => {
 		new Notice('[ERROR in Toolbox] failed to upload. See console.');
 		console.log('[ERROR in Toolbox] failed to upload.', err.error.message);
 	};
+
+	private originalFileNameFromPublicId(publicId: string): string {
+		return publicId.replace(/_[a-z0-9]{6}$/, '');
+	}
 
 	private formatCloudinaryUrl(
 		originalUrl: string,
