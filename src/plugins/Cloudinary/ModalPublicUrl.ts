@@ -34,20 +34,15 @@ export class ModalPublicUrl extends Modal {
 	}
 
 	private setHotkey(inputEl: HTMLInputElement) {
-		this.scope.register([], 'Enter', () => {
+		this.scope.register([], 'Enter', (evt) => {
+			evt.preventDefault();
 			const url = inputEl.value;
-			this.plugin.api.upload(
+			this.plugin.api?.upload(
 				url,
-				this.plugin.onCloudinaryUploadResponse(
-					this.fileNameFromUrl(url)
-				)
+				this.plugin.onCloudinaryResponseSuccess,
+				this.plugin.onCloudinaryResponseError
 			);
 			this.close();
 		});
-	}
-
-	private fileNameFromUrl(publicUrl: string): string {
-		const url = new URL(publicUrl);
-		return url.pathname.split('/').last() ?? '';
 	}
 }

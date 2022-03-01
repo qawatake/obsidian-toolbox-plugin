@@ -1,11 +1,15 @@
-import type { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 import { Notice, Setting } from 'obsidian';
 import {
 	MinimalPlugin,
 	type MinimalPluginSettings,
 	type UnknownObject,
 } from 'plugins/Shared';
-import { cloudinaryApi, type CloudinaryApi } from './CloudinaryApi';
+import {
+	CloudinaryDirectApi,
+	type CloudinaryApi,
+	type CloudinaryResponseCallback,
+	type CloudinaryResponseErrorCallback,
+} from './CloudinaryApi';
 import { ModalPublicUrl } from './ModalPublicUrl';
 
 interface CloudinarySettings extends MinimalPluginSettings {
@@ -26,7 +30,7 @@ export const DEFAULT_SETTINGS: CloudinarySettings = {
 
 export class Cloudinary extends MinimalPlugin {
 	settings: CloudinarySettings = DEFAULT_SETTINGS;
-	api: CloudinaryApi = cloudinaryApi;
+	api: CloudinaryApi | undefined;
 
 	override onload(): void {
 		this.settings = this.loadSettings(isCloudinarySettings);
@@ -135,10 +139,10 @@ export class Cloudinary extends MinimalPlugin {
 
 	private setApiConfig() {
 		const { cloudName, apiKey, apiSecret } = this.settings;
-		this.api.config({
-			cloud_name: cloudName,
-			api_key: apiKey,
-			api_secret: apiSecret,
+		this.api = new CloudinaryDirectApi({
+			cloudName,
+			apiKey,
+			apiSecret,
 		});
 	}
 
@@ -169,50 +173,38 @@ export class Cloudinary extends MinimalPlugin {
 		}
 	}
 
-	private handleImportedFile(file: File) {
+	private async handleImportedFile(file: File) {
 		if (!file.type.startsWith('image/')) {
 			new Notice(
 				`[ERROR in Toolbox]: ${file.name} is not an image file.`
 			);
 			return;
 		}
-		const reader = new FileReader();
-		reader.onload = (evt) => {
-			const url = evt.target?.result;
-			if (typeof url !== 'string') return;
-			this.api.upload(url, this.onCloudinaryUploadResponse(file.name));
-		};
-		reader.readAsDataURL(file);
+
+		this.api?.upload(
+			file,
+			this.onCloudinaryResponseSuccess,
+			this.onCloudinaryResponseError
+		);
 	}
 
-	onCloudinaryUploadResponse(
-		fileName: string
-	): (
-		err?: UploadApiErrorResponse,
-		result?: UploadApiResponse
-	) => Promise<void> {
-		return async (err, result) => {
-			if (err !== undefined) {
-				new Notice(
-					`[ERROR in Toolbox] failed to upload ${fileName}. See console.`
-				);
-				console.log(err);
-				return;
-			}
-			const gotUrl = result?.secure_url;
-			if (gotUrl === undefined) return;
-			const formattedUrl = this.formatCloudinaryUrl(
-				gotUrl,
-				this.settings.defaultWidth,
-				this.settings.defaultFormat
-			);
-			const basename = fileName.replace(/\.[a-z]+$/, '');
-			await navigator.clipboard.writeText(
-				`![${basename}](${formattedUrl})`
-			);
-			new Notice(`Copy link for ${basename}!`);
-		};
-	}
+	onCloudinaryResponseSuccess: CloudinaryResponseCallback = (result) => {
+		const gotUrl = result.secure_url;
+		const formattedUrl = this.formatCloudinaryUrl(
+			gotUrl,
+			this.settings.defaultWidth,
+			this.settings.defaultFormat
+		);
+		navigator.clipboard.writeText(
+			`![${result.original_filename}](${formattedUrl})`
+		);
+		new Notice(`Copy link for ${result.original_filename}!`);
+	};
+
+	onCloudinaryResponseError: CloudinaryResponseErrorCallback = (err) => {
+		new Notice('[ERROR in Toolbox] failed to upload. See console.');
+		console.log('[ERROR in Toolbox] failed to upload.', err.error.message);
+	};
 
 	private formatCloudinaryUrl(
 		originalUrl: string,
