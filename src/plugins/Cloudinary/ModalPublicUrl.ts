@@ -39,6 +39,7 @@ export class ModalPublicUrl extends Modal {
 			const url = inputEl.value;
 			this.plugin.api?.upload(
 				url,
+				{},
 				this.plugin.onCloudinaryResponseSuccess,
 				this.plugin.onCloudinaryResponseError
 			);
