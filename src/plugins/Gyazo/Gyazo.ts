@@ -54,6 +54,7 @@ export class Gyazo extends MinimalPlugin {
 				component.setButtonText('Save').onClick(() => {
 					this.settings.accessToken = accessToken;
 					inputEl.value = '';
+					this.api = this.setApi();
 					this.requestSaveSettings();
 				});
 			});
