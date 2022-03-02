@@ -106,18 +106,25 @@ export class Gyazo extends MinimalPlugin {
 
 		this.api?.upload(
 			file,
-			{},
+			{
+				app: 'Obsidian',
+			},
 			this.onGyazoResponseSuccess,
 			this.onGyazoResponseError
 		);
+		new Notice(`Copy link for uploaded: ${file.name}!`);
 	};
 
 	onGyazoResponseSuccess: GyazoResponseCallback = (result) => {
-		console.log('success', result);
+		const gyazoUrl = result.permalink_url;
+		const imageUrl = result.url;
+		const embedText = `[![](${imageUrl})](${gyazoUrl})`;
+		navigator.clipboard.writeText(embedText);
 	};
 
 	onGyazoResponseError: GyazoResponseErrorCallback = (err) => {
-		console.log('expected err', err);
+		new Notice('[ERROR in Toolbox] failed to upload. See console.');
+		console.log('[ERROR in Toolbox] failed to upload.', err.message);
 	};
 }
 
