@@ -1,6 +1,7 @@
 import * as CopyWikiLink from './CopyWikiLink/CopyWikiLink';
 import * as NoteRefactor from './NoteRefactor/NoteRefactor';
 import * as Cloudinary from './Cloudinary/Cloudinary';
+import * as Gyazo from './Gyazo/Gyazo';
 import type { IMinimalPlugin, MinimalPluginSettings } from './Shared';
 
 export type MinimalPluginsGeneratorMap = {
@@ -30,8 +31,15 @@ export const MINIMAL_PLUGIN_LIST: MinimalPluginsGeneratorMap = {
 	cloudinary: {
 		name: 'Cloudinary',
 		description:
-			'Uploads images to Cloudinary instead of storing them locally in your vault',
+			'Upload images to Cloudinary instead of storing them locally in your vault',
 		generator: Cloudinary.Cloudinary,
 		defaultData: Cloudinary.DEFAULT_SETTINGS,
+	},
+	gyazo: {
+		name: 'Gyazo',
+		description:
+			'Upload images to Cloudinary instead of storing then locally in your vault',
+		generator: Gyazo.Gyazo,
+		defaultData: Gyazo.DEFAULT_SETTINGS,
 	},
 };
