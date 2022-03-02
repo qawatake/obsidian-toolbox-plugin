@@ -183,6 +183,7 @@ export class Cloudinary extends MinimalPlugin {
 
 		this.api?.upload(
 			file,
+			{},
 			this.onCloudinaryResponseSuccess,
 			this.onCloudinaryResponseError
 		);
