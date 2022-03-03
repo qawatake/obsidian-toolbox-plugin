@@ -49,7 +49,8 @@ export class RandomGenerator extends MinimalPlugin {
 				)
 					.map((n) => chooseFrom[n % chooseFrom.length])
 					.join('');
-				await navigator.clipboard.writeText(random);
+				navigator.clipboard.writeText(random);
+				new Notice(`Copy random string: ${random}`);
 			},
 		});
 	}
