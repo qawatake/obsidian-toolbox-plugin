@@ -49,10 +49,10 @@ export class RandomGenerator extends MinimalPlugin {
 				)
 					.map((n) => chooseFrom[n % chooseFrom.length])
 					.join('');
-				navigator.clipboard.writeText(
-					this.settings.prefix + random + this.settings.suffix
-				);
-				new Notice(`Copy random string: ${random}`);
+				const text =
+					this.settings.prefix + random + this.settings.suffix;
+				navigator.clipboard.writeText(text);
+				new Notice(`Copy ${text}`);
 			},
 		});
 	}
