@@ -14,10 +14,7 @@ export class CopyWikiLink extends MinimalPlugin implements MinimalPlugin {
 				if (file === null) return false;
 				if (checking) return true;
 
-				const link = generateInternalLinkFrom(
-					this.app.metadataCache,
-					file
-				);
+				const link = generateInternalLinkFrom(this.app, file);
 				new Notice(`Copy wiki link of ${file.name}`);
 				navigator.clipboard.writeText(link);
 				return true;
