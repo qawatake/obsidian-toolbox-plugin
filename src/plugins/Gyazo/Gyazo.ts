@@ -34,7 +34,7 @@ export class Gyazo extends MinimalPlugin {
 			id: 'gyazo-upload',
 			name: 'Upload to Gyazo',
 			callback: () => {
-				this.showImportDialog(this.handleImportedFile);
+				this.showImportDialog();
 			},
 		});
 	}
@@ -67,69 +67,79 @@ export class Gyazo extends MinimalPlugin {
 		});
 	}
 
-	private showImportDialog(cb: HandleImportedFile) {
+	private showImportDialog() {
 		const inputEl = createEl('input', { type: 'file' });
 
 		inputEl.multiple = true;
 		inputEl.addEventListener('change', async () => {
 			const files = inputEl.files;
-			this.handleImportedFiles(files, cb);
+			this.handleImportedFiles(files);
 
 			inputEl.remove();
 		});
 		inputEl.click();
 	}
 
-	private handleImportedFiles(
-		files: FileList | null,
-		cb: HandleImportedFile
-	) {
+	private async handleImportedFiles(files: FileList | null) {
 		if (files === null || files.length === 0) {
 			return;
 		}
 
+		const linksToCopy: string[] = [];
+		const promises: Promise<void>[] = [];
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 			if (file === undefined) {
 				continue;
 			}
-			cb(file);
+			const { api } = this;
+			if (!api) return;
+
+			if (!file.type.startsWith('image/')) {
+				new Notice(
+					`[ERROR in Toolbox]: ${file.name} is not an image file.`
+				);
+				return;
+			}
+
+			promises.push(
+				api.upload(
+					file,
+					{
+						app: 'Obsidian',
+					},
+					this.onGyazoResponseSuccess(linksToCopy),
+					this.onGyazoResponseError
+				)
+			);
+			new Notice(`${file.name} uploaded!`);
+		}
+
+		await Promise.all(promises);
+		await navigator.clipboard.writeText(linksToCopy.join('\n'));
+		if (linksToCopy.length === 1) {
+			new Notice('Copy link!');
+		} else {
+			new Notice('Copy links!');
 		}
 	}
 
-	private handleImportedFile = (file: File) => {
-		if (!file.type.startsWith('image/')) {
-			new Notice(
-				`[ERROR in Toolbox]: ${file.name} is not an image file.`
-			);
-			return;
-		}
-
-		this.api?.upload(
-			file,
-			{
-				app: 'Obsidian',
-			},
-			this.onGyazoResponseSuccess,
-			this.onGyazoResponseError
-		);
-		new Notice(`Copy link for uploaded: ${file.name}!`);
-	};
-
-	onGyazoResponseSuccess: GyazoResponseCallback = (result) => {
-		const gyazoUrl = result.permalink_url;
-		const imageUrl = result.url;
-		const embedText = `[![](${imageUrl})](${gyazoUrl})`;
-		navigator.clipboard.writeText(embedText);
-	};
+	private onGyazoResponseSuccess(
+		linksToCopy: string[]
+	): GyazoResponseCallback {
+		return (result) => {
+			const gyazoUrl = result.permalink_url;
+			const imageUrl = result.url;
+			const embedText = `[![](${imageUrl})](${gyazoUrl})`;
+			linksToCopy.push(embedText);
+		};
+	}
 
 	onGyazoResponseError: GyazoResponseErrorCallback = (err) => {
 		new Notice('[ERROR in Toolbox] failed to upload. See console.');
 		console.log('[ERROR in Toolbox] failed to upload.', err.message);
 	};
 }
-
-type HandleImportedFile = (file: File) => void | Promise<void>;
 
 function isGyazoSettings(obj: unknown): obj is GyazoSettings {
 	if (typeof obj !== 'object' || obj === null) return false;

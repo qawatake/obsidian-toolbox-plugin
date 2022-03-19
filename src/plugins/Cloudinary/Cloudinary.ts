@@ -159,79 +159,89 @@ export class Cloudinary extends MinimalPlugin {
 		inputEl.click();
 	}
 
-	private handleImportedFiles(files: FileList | null) {
+	private async handleImportedFiles(files: FileList | null) {
 		if (files === null || files.length === 0) {
 			return;
 		}
+		const { api } = this;
+		if (!api) return;
 
+		const promises: Promise<void>[] = [];
+		const linksToCopy: string[] = [];
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 			if (file === undefined) {
 				continue;
 			}
-			this.handleImportedFile(file);
-		}
-	}
+			if (!file.type.startsWith('image/')) {
+				new Notice(
+					`[ERROR in Toolbox]: ${file.name} is not an image file.`
+				);
+				return;
+			}
 
-	private async handleImportedFile(file: File) {
-		if (!file.type.startsWith('image/')) {
-			new Notice(
-				`[ERROR in Toolbox]: ${file.name} is not an image file.`
+			promises.push(
+				api.upload(
+					file,
+					{},
+					this.onCloudinaryResponseSuccess(linksToCopy),
+					this.onCloudinaryResponseError
+				)
 			);
-			return;
 		}
-
-		this.api?.upload(
-			file,
-			{},
-			this.onCloudinaryResponseSuccess,
-			this.onCloudinaryResponseError
-		);
+		await Promise.all(promises);
+		await navigator.clipboard.writeText(linksToCopy.join('\n'));
+		if (linksToCopy.length === 1) {
+			new Notice('Copy link!');
+		} else {
+			new Notice('Copy links!');
+		}
 	}
 
-	onCloudinaryResponseSuccess: CloudinaryResponseCallback = (result) => {
-		const gotUrl = result.secure_url;
-		const formattedUrl = this.formatCloudinaryUrl(
-			gotUrl,
-			this.settings.defaultWidth,
-			this.settings.defaultFormat
-		);
-		const originalFileName = this.originalFileNameFromPublicId(
-			result.public_id
-		);
-		navigator.clipboard.writeText(
-			`![${originalFileName}](${formattedUrl})`
-		);
-		new Notice(`Copy link for ${originalFileName}!`);
-	};
+	private onCloudinaryResponseSuccess(
+		linksToCopy: string[]
+	): CloudinaryResponseCallback {
+		return (result) => {
+			const gotUrl = result.secure_url;
+			const formattedUrl = formatCloudinaryUrl(
+				gotUrl,
+				this.settings.defaultWidth,
+				this.settings.defaultFormat
+			);
+			const originalFileName = originalFileNameFromPublicId(
+				result.public_id
+			);
+			const link = `![${originalFileName}](${formattedUrl})`;
+			linksToCopy.push(link);
+			new Notice(`${originalFileName} uploaded!`);
+		};
+	}
 
 	onCloudinaryResponseError: CloudinaryResponseErrorCallback = (err) => {
 		new Notice('[ERROR in Toolbox] failed to upload. See console.');
 		console.log('[ERROR in Toolbox] failed to upload.', err.error.message);
 	};
+}
 
-	private originalFileNameFromPublicId(publicId: string): string {
-		return publicId.replace(/_[a-z0-9]{6}$/, '');
-	}
+export function formatCloudinaryUrl(
+	originalUrl: string,
+	width: number,
+	extension: string
+): string {
+	const url = new URL(originalUrl);
+	const splittedPath = url.pathname.split('/');
+	const newPath = [
+		splittedPath.slice(1, 4),
+		`w_${width}`,
+		splittedPath.slice(4),
+	].join('/');
+	url.pathname = newPath;
+	// url.href replaces '/' with ','. I don't know why. So I explicitly replace ',' with '/'.
+	return url.href.replace(/,/g, '/').replace(/\.[a-z]+$/, '.' + extension);
+}
 
-	private formatCloudinaryUrl(
-		originalUrl: string,
-		width: number,
-		extension: string
-	): string {
-		const url = new URL(originalUrl);
-		const splittedPath = url.pathname.split('/');
-		const newPath = [
-			splittedPath.slice(1, 4),
-			`w_${width}`,
-			splittedPath.slice(4),
-		].join('/');
-		url.pathname = newPath;
-		// url.href replaces '/' with ','. I don't know why. So I explicitly replace ',' with '/'.
-		return url.href
-			.replace(/,/g, '/')
-			.replace(/\.[a-z]+$/, '.' + extension);
-	}
+export function originalFileNameFromPublicId(publicId: string): string {
+	return publicId.replace(/_[a-z0-9]{6}$/, '');
 }
 
 function isCloudinarySettings(obj: unknown): obj is CloudinarySettings {

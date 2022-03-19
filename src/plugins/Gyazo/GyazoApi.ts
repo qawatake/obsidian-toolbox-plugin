@@ -14,7 +14,7 @@ export interface GyazoApi {
 		options: Record<string, string>,
 		onSuccess: GyazoResponseCallback,
 		onError: GyazoResponseErrorCallback
-	): void | Promise<void>;
+	): Promise<void>;
 }
 
 export interface GyazoApiAuth {
@@ -45,9 +45,9 @@ export class GyazoDirectApi implements GyazoApi {
 			});
 			const body = await res.json();
 			if (res.status === 200 && isGyazoResponseResult(body)) {
-				onSuccess(body);
+				await onSuccess(body);
 			} else if (isGyazoResponseError(body)) {
-				onError(body);
+				await onError(body);
 			} else {
 				new Notice('[ERROR in Toolbox] Unexpected error. See console.');
 				console.log('uncaught err:', body);
