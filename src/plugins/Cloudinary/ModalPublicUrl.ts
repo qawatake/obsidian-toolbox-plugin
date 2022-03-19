@@ -1,5 +1,13 @@
-import { App, Modal } from 'obsidian';
-import type { Cloudinary } from './Cloudinary';
+import { App, Modal, Notice } from 'obsidian';
+import {
+	formatCloudinaryUrl,
+	originalFileNameFromPublicId,
+	type Cloudinary,
+} from './Cloudinary';
+import type {
+	CloudinaryResponseCallback,
+	CloudinaryResponseErrorCallback,
+} from './CloudinaryApi';
 
 export class ModalPublicUrl extends Modal {
 	private readonly plugin: Cloudinary;
@@ -35,15 +43,40 @@ export class ModalPublicUrl extends Modal {
 
 	private setHotkey(inputEl: HTMLInputElement) {
 		this.scope.register([], 'Enter', (evt) => {
-			evt.preventDefault();
-			const url = inputEl.value;
-			this.plugin.api?.upload(
-				url,
-				{},
-				this.plugin.onCloudinaryResponseSuccess,
-				this.plugin.onCloudinaryResponseError
-			);
-			this.close();
+			(async () => {
+				evt.preventDefault();
+				const url = inputEl.value;
+				await this.plugin.api?.upload(
+					url,
+					{},
+					this.onCloudinaryResponseSuccess,
+					this.onCloudinaryResponseError
+				);
+				this.close();
+			})();
 		});
 	}
+
+	private onCloudinaryResponseSuccess: CloudinaryResponseCallback = (
+		result
+	) => {
+		const gotUrl = result.secure_url;
+		const formattedUrl = formatCloudinaryUrl(
+			gotUrl,
+			this.plugin.settings.defaultWidth,
+			this.plugin.settings.defaultFormat
+		);
+		const originalFileName = originalFileNameFromPublicId(result.public_id);
+		navigator.clipboard.writeText(
+			`![${originalFileName}](${formattedUrl})`
+		);
+		new Notice(`Copy link for ${originalFileName}!`);
+	};
+
+	private onCloudinaryResponseError: CloudinaryResponseErrorCallback = (
+		err
+	) => {
+		new Notice('[ERROR in Toolbox] failed to upload. See console.');
+		console.log('[ERROR in Toolbox] failed to upload.', err.error.message);
+	};
 }

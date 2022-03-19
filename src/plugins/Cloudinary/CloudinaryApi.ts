@@ -22,7 +22,7 @@ export interface CloudinaryApi {
 		options: Record<string, string>,
 		onSuccess: CloudinaryResponseCallback,
 		onError: CloudinaryResponseErrorCallback
-	): void | Promise<void>;
+	): Promise<void>;
 	/**
 	 *
 	 * @param options : options other than authentication
@@ -32,7 +32,7 @@ export interface CloudinaryApi {
 		options: Record<string, string>,
 		onSuccess: CloudinaryResponseCallback,
 		onError: CloudinaryResponseErrorCallback
-	): void | Promise<void>;
+	): Promise<void>;
 }
 
 export type CloudinaryResponseCallback = (
@@ -92,10 +92,10 @@ export class CloudinaryDirectApi implements CloudinaryApi {
 			const body = await res.json();
 			if (res.status === 200) {
 				if (isCloudinaryResponseResult(body)) {
-					success(body);
+					await success(body);
 				}
 			} else if (isCloudinaryResponseError(body)) {
-				error(body);
+				await error(body);
 			} else {
 				new Notice('[ERROR in Toolbox] failed to upload. See console.');
 				console.log('[ERROR in Toolbox]: unexpected error.', res.body);
